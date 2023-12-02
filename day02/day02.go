@@ -92,9 +92,7 @@ func (cntr counter) le(o counter) bool {
 
 func (cntr counter) union(o counter) {
 	for k, c := range o {
-		if c > cntr[k] {
-			cntr[k] = c
-		}
+		cntr[k] = max(cntr[k], c)
 	}
 }
 
