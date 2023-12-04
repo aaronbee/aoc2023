@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/aaronbee/aoc2023"
 )
 
 func main() {
@@ -97,9 +99,5 @@ func (cntr counter) union(o counter) {
 }
 
 func (cntr counter) power() int {
-	p := 1
-	for _, c := range cntr {
-		p *= c
-	}
-	return p
+	return aoc2023.ProdMapVal(cntr)
 }

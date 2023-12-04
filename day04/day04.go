@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/aaronbee/aoc2023"
 )
 
 func main() {
@@ -26,10 +28,7 @@ func main() {
 			counts[n+i+1] += count
 		}
 	}
-	var part2 int
-	for _, v := range counts {
-		part2 += v
-	}
+	part2 := aoc2023.SumSlice(counts)
 	fmt.Println("Part 1:", part1)
 	fmt.Println("Part 2:", part2)
 }

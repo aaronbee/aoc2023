@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/aaronbee/aoc2023"
 )
 
 func main() {
@@ -37,11 +39,8 @@ func part1(data []string) int {
 			i = x + 1
 		}
 	}
-	sum := 0
-	for _, part := range parts {
-		sum += part
-	}
-	return sum
+
+	return aoc2023.SumMapVal(parts)
 }
 
 func addPartsNear(data []string, parts map[loc]int, x, y int) {
@@ -113,9 +112,5 @@ func gearRatio(data []string, x, y int) int {
 	if len(parts) != 2 {
 		return 0
 	}
-	ratio := 1
-	for _, part := range parts {
-		ratio *= part
-	}
-	return ratio
+	return aoc2023.ProdMapVal(parts)
 }
