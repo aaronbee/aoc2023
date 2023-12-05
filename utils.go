@@ -36,17 +36,19 @@ func Atoi(s string) int {
 	return i
 }
 
-func FieldsIter(s string, fn func(s string)) {
+func IntFieldsIter(s string, fn func(i int)) {
 	i := 0
 	for {
 		for ; i < len(s) && s[i] == ' '; i++ {
 		}
 		beg := i
+		var v int
 		for ; i < len(s) && s[i] != ' '; i++ {
+			v = v*10 + int(s[i]-'0')
 		}
 		if beg == i {
 			return
 		}
-		fn(s[beg:i])
+		fn(v)
 	}
 }

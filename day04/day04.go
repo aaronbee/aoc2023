@@ -49,12 +49,12 @@ func matches(s string) int {
 		panic(fmt.Errorf("unexpected card: %q", card))
 	}
 	boolSet := [101]bool{}
-	aoc2023.FieldsIter(winners, func(s string) {
-		boolSet[aoc2023.Atoi(s)] = true
+	aoc2023.IntFieldsIter(winners, func(v int) {
+		boolSet[v] = true
 	})
 	var count int
-	aoc2023.FieldsIter(plays, func(s string) {
-		if boolSet[aoc2023.Atoi(s)] {
+	aoc2023.IntFieldsIter(plays, func(v int) {
+		if boolSet[v] {
 			count++
 		}
 	})
