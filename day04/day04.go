@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aaronbee/aoc2023"
 )
@@ -18,22 +19,27 @@ func main() {
 	for i := range counts {
 		counts[i] = 1
 	}
+	t := time.Now()
 	var part1 int
 	for n, line := range lines {
-		part1 += evalGame1(line)
+		m := matches(line)
+		if m == 0 {
+			continue
+		}
+		part1 += 1 << (m - 1)
 
-		score := score2(line)
 		count := counts[n]
-		for i := 0; i < score && n+i+1 < len(counts); i++ {
+		for i := 0; i < m && n+i+1 < len(counts); i++ {
 			counts[n+i+1] += count
 		}
 	}
 	part2 := aoc2023.SumSlice(counts)
+	fmt.Println("time:", time.Since(t))
 	fmt.Println("Part 1:", part1)
 	fmt.Println("Part 2:", part2)
 }
 
-func evalGame1(s string) int {
+func matches(s string) int {
 	_, card, ok := strings.Cut(s, ": ")
 	if !ok {
 		panic(fmt.Errorf("unexpected line: %q", s))
@@ -42,41 +48,16 @@ func evalGame1(s string) int {
 	if !ok {
 		panic(fmt.Errorf("unexpected card: %q", card))
 	}
-	w := make(map[string]struct{})
-	for _, n := range strings.Fields(winners) {
-		w[n] = struct{}{}
-	}
-	score := 0
-	for _, n := range strings.Fields(plays) {
-		if _, ok := w[n]; ok {
-			if score == 0 {
-				score = 1
-			} else {
-				score <<= 1
-			}
+	boolSet := [101]bool{}
+	aoc2023.FieldsIter(winners, func(s string) {
+		boolSet[aoc2023.Atoi(s)] = true
+	})
+	var count int
+	aoc2023.FieldsIter(plays, func(s string) {
+		if boolSet[aoc2023.Atoi(s)] {
+			count++
 		}
-	}
-	return score
-}
+	})
 
-func score2(s string) int {
-	_, card, ok := strings.Cut(s, ": ")
-	if !ok {
-		panic(fmt.Errorf("unexpected line: %q", s))
-	}
-	winners, plays, ok := strings.Cut(card, " | ")
-	if !ok {
-		panic(fmt.Errorf("unexpected card: %q", card))
-	}
-	w := make(map[string]struct{})
-	for _, n := range strings.Fields(winners) {
-		w[n] = struct{}{}
-	}
-	score := 0
-	for _, n := range strings.Fields(plays) {
-		if _, ok := w[n]; ok {
-			score++
-		}
-	}
-	return score
+	return count
 }
