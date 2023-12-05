@@ -48,7 +48,7 @@ func matches(s string) int {
 	if !ok {
 		panic(fmt.Errorf("unexpected card: %q", card))
 	}
-	boolSet := [101]bool{}
+	boolSet := [100]bool{}
 	aoc2023.IntFieldsIter(winners, func(v int) {
 		boolSet[v] = true
 	})
