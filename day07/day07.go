@@ -24,17 +24,19 @@ func main() {
 		if !ok {
 			panic(fmt.Errorf("unexpected line: %q", l))
 		}
+		h1, h2 := parseHand(hand)
 		plays = append(plays, play{
-			h:   parseHand(hand),
+			h1:  h1,
+			h2:  h2,
 			bid: aoc2023.Atoi(bid),
 		})
 	}
 
 	slices.SortFunc(plays, func(a, b play) int {
-		if a.h.t != b.h.t {
-			return cmp.Compare(a.h.t, b.h.t)
+		if a.h1.t != b.h1.t {
+			return cmp.Compare(a.h1.t, b.h1.t)
 		}
-		return slices.Compare(a.h.cards[:], b.h.cards[:])
+		return slices.Compare(a.h1.cards[:], b.h1.cards[:])
 	})
 	var rank int
 	var part1 int
@@ -43,15 +45,29 @@ func main() {
 		part1 += p.bid * rank
 	}
 	fmt.Println("Part 1:", part1)
+	slices.SortFunc(plays, func(a, b play) int {
+		if a.h2.t != b.h2.t {
+			return cmp.Compare(a.h2.t, b.h2.t)
+		}
+		return slices.Compare(a.h2.cards[:], b.h2.cards[:])
+	})
+	rank = 0
+	var part2 int
+	for _, p := range plays {
+		rank++
+		part2 += p.bid * rank
+	}
+	fmt.Println("Part 2:", part2)
 }
 
 type play struct {
-	h   hand
+	h1  hand
+	h2  hand
 	bid int
 }
 
 func (p play) String() string {
-	return fmt.Sprintf("%s bid=%d", p.h, p.bid)
+	return fmt.Sprintf("%s %s bid=%d", p.h1, p.h2, p.bid)
 }
 
 type handType byte
@@ -94,7 +110,7 @@ func (c card) String() string {
 		return string(rune(c + '0'))
 	case 10:
 		return "T"
-	case 11:
+	case 1, 11:
 		return "J"
 	case 12:
 		return "Q"
@@ -115,9 +131,9 @@ func (h hand) String() string {
 	return fmt.Sprintf("%v %v", h.cards, h.t)
 }
 
-func parseHand(s string) hand {
+func parseHand(s string) (hand, hand) {
 	var cards [5]card
-	var counts [15]card
+	var counts [15]int
 	for i := 0; i < len(s); i++ {
 		var c card
 		switch b := s[i]; b {
@@ -141,6 +157,8 @@ func parseHand(s string) hand {
 		counts[c]++
 	}
 
+	jokerCount := counts[11]
+
 	var t handType
 	slices.Sort(counts[:])
 	last := len(counts) - 1
@@ -163,5 +181,61 @@ func parseHand(s string) hand {
 		}
 	}
 
-	return hand{cards: cards, t: t}
+	var cards2 [5]card
+	for i, c := range cards {
+		if c == 11 {
+			cards2[i] = 1
+		} else {
+			cards2[i] = c
+		}
+	}
+
+	t2 := t
+	switch jokerCount {
+	case 0:
+	case 1:
+		switch t {
+		case highCard:
+			t2 = onePair
+		case onePair:
+			t2 = threeOfAKind
+		case twoPair:
+			t2 = fullHouse
+		case threeOfAKind:
+			t2 = fourOfAKind
+		case fourOfAKind:
+			t2 = fiveOfAKind
+		default:
+			panic(fmt.Errorf("impossible. cards=%s type=%s js=%d", cards, t, counts[11]))
+		}
+	case 2:
+		switch t {
+		case onePair:
+			t2 = threeOfAKind
+		case twoPair:
+			t2 = fourOfAKind
+		case fullHouse:
+			t2 = fiveOfAKind
+		default:
+			panic(fmt.Errorf("impossible. cards=%s type=%s js=%d", cards, t, counts[11]))
+		}
+	case 3:
+		switch t {
+		case threeOfAKind:
+			t2 = fourOfAKind
+		case fullHouse:
+			t2 = fiveOfAKind
+		default:
+			panic(fmt.Errorf("impossible. cards=%s type=%s js=%d", cards, t, counts[11]))
+		}
+	case 4:
+		switch t {
+		case fourOfAKind:
+			t2 = fiveOfAKind
+		default:
+			panic(fmt.Errorf("impossible. cards=%s type=%s js=%d", cards, t, counts[11]))
+		}
+	}
+
+	return hand{cards: cards, t: t}, hand{cards: cards2, t: t2}
 }
