@@ -8,7 +8,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/aaronbee/aoc2023"
 )
@@ -24,7 +23,7 @@ func main() {
 	}
 	var seeds []seed
 	aoc2023.IntFieldsIter(strings.TrimPrefix(s.Text(), "seeds: "), func(i int) {
-		seeds = append(seeds, seed{i: i, c: 1})
+		seeds = append(seeds, seed{s: i, c: 1})
 	})
 
 	var ms []*maps
@@ -57,13 +56,13 @@ func main() {
 	for i := 0; i < len(seeds); i += 2 {
 		s := seeds[i]
 		c := seeds[i+1]
-		seeds2[i/2] = seed{s.i, c.i}
+		seeds2[i/2] = seed{s.s, c.s}
 	}
-	fmt.Println("Part 1:", closestLocation(seeds2, ms))
+	fmt.Println("Part 2:", closestLocation(seeds2, ms))
 }
 
 type seed struct {
-	i int
+	s int
 	c int
 }
 
@@ -81,32 +80,44 @@ type mapping struct {
 func closestLocation(seeds []seed, ms []*maps) int {
 	closestLocation := math.MaxInt
 	for _, seed := range seeds {
-		fmt.Println(time.Now(), seed)
-		for i := 0; i < seed.c; i++ {
-			closestLocation = min(closestLocation, seedLocation(seed.i+i, ms))
-		}
+		closestLocation = min(closestLocation, seedLocation(seed, ms))
 	}
-
 	return closestLocation
 }
 
-func seedLocation(seed int, ms []*maps) int {
-	v := seed
-	for _, ms := range ms {
-		i, ok := slices.BinarySearchFunc(ms.ms, v, func(m *mapping, v int) int {
-			if m.src > v {
-				return +1
-			} else if m.src+m.count <= v {
-				return -1
-			}
-			return 0
-		})
-		if !ok {
-			// no mapping found
+func seedLocation(s seed, ms []*maps) int {
+	if len(ms) == 0 {
+		return s.s
+	}
+	closestLocation := math.MaxInt
+	maps, nextMs := ms[0], ms[1:]
+
+	for _, m := range maps.ms {
+		if s.s > m.dst+m.count {
 			continue
 		}
-		m := ms.ms[i]
-		v += m.dst - m.src
+		if s.s < m.src {
+			// Some seeds before mapping
+			if s.s+s.c-1 < m.src {
+				// All seeds before mapping
+				return min(closestLocation, seedLocation(s, nextMs))
+			}
+			nextS := m.src
+			curSeed := seed{s: s.s, c: nextS - s.s}
+			closestLocation = min(closestLocation, seedLocation(curSeed, nextMs))
+			s = seed{s: nextS, c: s.s + s.c - nextS}
+		}
+		mapped := s.s + m.dst - m.src
+		if s.s+s.c < m.src+m.count {
+			// Rest of seeds contained in this mapping
+			s = seed{s: mapped, c: s.c}
+			return min(closestLocation, seedLocation(s, nextMs))
+		}
+		nextS := m.src + m.count
+		curSeed := seed{s: mapped, c: nextS - s.s}
+		closestLocation = min(closestLocation, seedLocation(curSeed, nextMs))
+		s = seed{s: nextS, c: s.s + s.c - nextS}
 	}
-	return v
+	// If we've reached here, there are some seeds beyond any mapping
+	return min(closestLocation, seedLocation(s, nextMs))
 }
