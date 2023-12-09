@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -28,14 +29,17 @@ func main() {
 		}
 		nodes[n] = node{l, r}
 	}
-	fmt.Println("Part 1:", part1(dirs, nodes))
+	c := walk(dirs, nodes, "AAA", func(s string) bool { return s == "ZZZ" })
+	fmt.Println("Part 1:", c)
+
+	fmt.Println("Part 2:", part2(dirs, nodes))
 }
 
-func part1(dirs string, nodes map[string]node) int {
+func walk(dirs string, nodes map[string]node, start string, end func(string) bool) int {
 	count := 0
-	node, ok := nodes["AAA"]
+	node, ok := nodes[start]
 	if !ok {
-		panic(fmt.Errorf("cant find node AAA"))
+		panic(fmt.Errorf("cant find node %q", start))
 	}
 	for {
 		dir := dirs[count%len(dirs)]
@@ -49,7 +53,7 @@ func part1(dirs string, nodes map[string]node) int {
 			panic(fmt.Errorf("unexpected dir: %q", dir))
 		}
 		count++
-		if next == "ZZZ" {
+		if end(next) {
 			return count
 		}
 		node, ok = nodes[next]
@@ -61,4 +65,38 @@ func part1(dirs string, nodes map[string]node) int {
 
 type node struct {
 	l, r string
+}
+
+func part2(dirs string, nodes map[string]node) int {
+	var stepsToZ []int
+	for n := range nodes {
+		if strings.HasSuffix(n, "A") {
+			pos := walk(dirs, nodes, n, func(s string) bool {
+				return strings.HasSuffix(s, "Z")
+			})
+			stepsToZ = append(stepsToZ, pos)
+		}
+	}
+	return gcm(stepsToZ)
+}
+
+func gcm(is []int) int {
+	ms := make([]int, len(is))
+	copy(ms, is)
+	max := slices.Max(is)
+	for {
+		allEqual := true
+		for i := range ms {
+			for ms[i] < max {
+				ms[i] += is[i]
+			}
+			if ms[i] > max {
+				allEqual = false
+				max = ms[i]
+			}
+		}
+		if allEqual {
+			return max
+		}
+	}
 }
