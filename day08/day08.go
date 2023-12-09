@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
+
+	"github.com/aaronbee/aoc2023"
 )
 
 func main() {
@@ -77,26 +78,5 @@ func part2(dirs string, nodes map[string]node) int {
 			stepsToZ = append(stepsToZ, pos)
 		}
 	}
-	return gcm(stepsToZ)
-}
-
-func gcm(is []int) int {
-	ms := make([]int, len(is))
-	copy(ms, is)
-	max := slices.Max(is)
-	for {
-		allEqual := true
-		for i := range ms {
-			for ms[i] < max {
-				ms[i] += is[i]
-			}
-			if ms[i] > max {
-				allEqual = false
-				max = ms[i]
-			}
-		}
-		if allEqual {
-			return max
-		}
-	}
+	return aoc2023.GCM(stepsToZ)
 }

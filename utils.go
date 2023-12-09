@@ -1,6 +1,8 @@
 package aoc2023
 
-import "strconv"
+import (
+	"strconv"
+)
 
 type addable interface {
 	~int8 | ~uint8 | ~int16 | ~uint16 | ~int32 | ~uint32 | ~int64 | ~uint64 | ~int | ~uint
@@ -51,4 +53,44 @@ func IntFieldsIter(s string, fn func(i int)) {
 		}
 		fn(v)
 	}
+}
+
+// https://en.wikipedia.org/wiki/Greatest_common_divisor#Binary_GCD_algorithm
+func GCD(a, b int) int {
+	d := 0
+	for {
+		if a == b {
+			return a << d
+		}
+		if a%2 == 0 && b%2 == 0 {
+			a /= 2
+			b /= 2
+			d++
+			continue
+		}
+		if a%2 == 0 {
+			a /= 2
+			continue
+		}
+		if b%2 == 0 {
+			b /= 2
+			continue
+		}
+		if a < b {
+			a, b = b, a
+		}
+		a = (a - b) / 2
+	}
+}
+
+func GCM(vs []int) int {
+	if len(vs) == 0 {
+		return 1
+	}
+	gcm := vs[0]
+	for _, v := range vs[1:] {
+		d := GCD(gcm, v)
+		gcm = gcm / d * v
+	}
+	return gcm
 }
