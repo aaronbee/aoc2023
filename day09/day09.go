@@ -16,24 +16,19 @@ func main() {
 		panic(err)
 	}
 	s := bufio.NewScanner(f)
-	var lines [][]int
+	var part1, part2 int
 	for s.Scan() {
 		fs := bytes.Fields(s.Bytes())
 		nums := slices.Grow([]int(nil), len(fs))
 		for _, f := range fs {
 			nums = append(nums, aoc2023.Atoi(string(f)))
 		}
-		lines = append(lines, nums)
+		ns := expand(nums)
+		part1 += next(ns)
+		part2 += prev(ns)
 	}
-	fmt.Println("Part 1:", part1(lines))
-}
-
-func part1(lines [][]int) int {
-	sum := 0
-	for _, l := range lines {
-		sum += next(l)
-	}
-	return sum
+	fmt.Println("Part 1:", part1)
+	fmt.Println("Part 2:", part2)
 }
 
 func allEqual(s []int) bool {
@@ -53,25 +48,34 @@ func last[S ~[]E, E any](s S) E {
 	return s[len(s)-1]
 }
 
-func next(l []int) int {
+func expand(l []int) [][]int {
 	nums := append([][]int(nil), l)
 	for {
 		cur := last(nums)
-		next := make([]int, len(cur)-1, len(cur))
+		next := make([]int, len(cur)-1)
 		for i := range next {
 			next[i] = cur[i+1] - cur[i]
 		}
+		nums = append(nums, next)
 		if allEqual(next) {
-			next = append(next, next[0])
-			nums = append(nums, next)
 			break
 		}
-		nums = append(nums, next)
 	}
-	for j := len(nums) - 1; j > 0; j-- {
-		diff := last(nums[j])
-		nums[j-1] = append(nums[j-1], last(nums[j-1])+diff)
-	}
+	return nums
+}
 
-	return last(nums[0])
+func next(nums [][]int) int {
+	diff := last(nums)[0]
+	for j := len(nums) - 2; j >= 0; j-- {
+		diff += last(nums[j])
+	}
+	return diff
+}
+
+func prev(nums [][]int) int {
+	diff := last(nums)[0]
+	for j := len(nums) - 2; j >= 0; j-- {
+		diff = nums[j][0] - diff
+	}
+	return diff
 }
