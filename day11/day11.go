@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"slices"
 )
 
 func main() {
@@ -12,10 +11,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	g := grid(bytes.Split(byts, []byte{'\n'}))
-	g = g.expand()
-	gs := g.galaxies()
-	fmt.Println("Part 1:", sumDistances(gs))
+	g := grid{g: bytes.Split(byts, []byte{'\n'})}
+	g.expand()
+	fmt.Println("Part 1:", sumDistances(g.galaxies(2)))
+	fmt.Println("Part 2:", sumDistances(g.galaxies(1000000)))
 }
 
 type pos struct{ x, y int }
@@ -28,44 +27,53 @@ func distance(a, b pos) int {
 	return xDist + yDist
 }
 
-type grid [][]byte
+type grid struct {
+	g     [][]byte
+	xExps []int
+	yExps []int
+}
 
-func (g grid) expand() grid {
+func (g *grid) expand() {
 horizontalloop:
-	for x := 0; x < len(g[0]); x++ {
-		for y := range g {
-			if g[y][x] != '.' {
+	for x := 0; x < len(g.g[0]); x++ {
+		for y := range g.g {
+			if g.g[y][x] != '.' {
 				continue horizontalloop
 			}
 		}
-		for y := range g {
-			g[y] = slices.Insert(g[y], x, '.')
-		}
-		x++
+		g.xExps = append(g.xExps, x)
 	}
 
 verticalloop:
-	for y := 0; y < len(g); y++ {
-		for x := range g[y] {
-			if g[y][x] != '.' {
+	for y := 0; y < len(g.g); y++ {
+		for x := range g.g[y] {
+			if g.g[y][x] != '.' {
 				continue verticalloop
 			}
 		}
-		newRow := make([]byte, len(g[y]))
-		copy(newRow, g[y])
-		g = slices.Insert(g, y, newRow)
-		y++
+		g.yExps = append(g.yExps, y)
 	}
-
-	return g
 }
 
-func (g grid) galaxies() []pos {
+func (g grid) galaxies(expFactor int) []pos {
 	var gs []pos
-	for y, row := range g {
+	yExpCount := 0
+	for y, row := range g.g {
+		if yExpCount < len(g.yExps) && g.yExps[yExpCount] == y {
+			yExpCount++
+			continue
+		}
+		xExpCount := 0
 		for x, cell := range row {
+			if xExpCount < len(g.xExps) && g.xExps[xExpCount] == x {
+				xExpCount++
+				continue
+			}
 			if cell == '#' {
-				gs = append(gs, pos{x, y})
+				gs = append(gs, pos{
+					// expFactor-1 because otherwise we over count empty rows and columns
+					x + xExpCount*(expFactor-1),
+					y + yExpCount*(expFactor-1)})
 			}
 		}
 	}
