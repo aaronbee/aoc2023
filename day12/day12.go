@@ -15,8 +15,10 @@ func main() {
 		panic(err)
 	}
 	s := bufio.NewScanner(f)
-	var part1 int
+	var part1, part2 int
+	i := 0
 	for s.Scan() {
+		i++
 		springs, cs, ok := strings.Cut(s.Text(), " ")
 		if !ok {
 			panic("bad line")
@@ -27,9 +29,16 @@ func main() {
 		}
 		r := row{springs: springs, counts: counts}
 		part1 += r.arrangements()
+		part2 += r.arrangements2()
 	}
 
 	fmt.Println("Part 1:", part1)
+	fmt.Println("Part 2:", part2)
+}
+
+type cacheKey struct {
+	s  string
+	cs int
 }
 
 type row struct {
@@ -38,7 +47,21 @@ type row struct {
 }
 
 func (r *row) arrangements() int {
-	return matchCount(r.springs, r.counts)
+	return matchCount(r.springs, r.counts, make(map[cacheKey]int))
+}
+
+func (r *row) arrangements2() int {
+	var buf strings.Builder
+	counts := make([]int, len(r.counts)*5)
+	for i := 0; i < 5; i++ {
+		if i != 0 {
+			buf.WriteByte('?')
+		}
+		buf.WriteString(r.springs)
+
+		copy(counts[i*len(r.counts):], r.counts)
+	}
+	return matchCount(buf.String(), counts, make(map[cacheKey]int))
 }
 
 func length(cs []int) int {
@@ -69,7 +92,7 @@ func valid(s string, run, offset int) bool {
 	return true
 }
 
-func matchCount(s string, cs []int) int {
+func matchCount(s string, cs []int, cache map[cacheKey]int) int {
 	if len(cs) == 0 {
 		if strings.Contains(s, "#") {
 			// invalid, didn't cover all the '#
@@ -81,6 +104,9 @@ func matchCount(s string, cs []int) int {
 	if l > len(s) {
 		return 0
 	}
+	if v, ok := cache[cacheKey{s, len(cs)}]; ok {
+		return v
+	}
 	var count int
 	run, rest := cs[0], cs[1:]
 	for i := 0; i <= len(s)-l; i++ {
@@ -89,12 +115,13 @@ func matchCount(s string, cs []int) int {
 				count++
 				break
 			}
-			count += matchCount(s[run+i+1:], rest)
+			count += matchCount(s[run+i+1:], rest, cache)
 		}
 		if s[i] == '#' {
 			// can't skip over any '#'
 			break
 		}
 	}
+	cache[cacheKey{s, len(cs)}] = count
 	return count
 }

@@ -14,7 +14,7 @@ func TestMatchCount(t *testing.T) {
 		s: "????#?#?..?#?", cs: []int{4, 1},
 		exp: 2,
 	}} {
-		got := matchCount(tc.s, tc.cs)
+		got := matchCount(tc.s, tc.cs, make(map[cacheKey]int))
 		if got != tc.exp {
 			t.Errorf("%s %v got=%d exp=%d", tc.s, tc.cs, got, tc.exp)
 		}
