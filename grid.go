@@ -9,6 +9,20 @@ func (p Pos2D) East() Pos2D  { return Pos2D{p.X + 1, p.Y} }
 func (p Pos2D) South() Pos2D { return Pos2D{p.X, p.Y + 1} }
 func (p Pos2D) West() Pos2D  { return Pos2D{p.X - 1, p.Y} }
 
+func (p Pos2D) Step(d Dir) Pos2D {
+	switch d {
+	case North:
+		return p.North()
+	case East:
+		return p.East()
+	case South:
+		return p.South()
+	case West:
+		return p.West()
+	}
+	panic(fmt.Errorf("unexpected dir: %d", d))
+}
+
 type Dir int
 
 const (
@@ -19,6 +33,16 @@ const (
 )
 
 type Grid2D [][]byte
+
+func (g Grid2D) Get(p Pos2D) (byte, bool) {
+	if p.Y < 0 || p.Y >= len(g) {
+		return 0, false
+	}
+	if p.X < 0 || p.X >= len(g[p.Y]) {
+		return 0, false
+	}
+	return g[p.Y][p.X], true
+}
 
 func (g Grid2D) Iter(p Pos2D, d Dir, yield func(p Pos2D, v byte) bool) {
 	if p.Y < 0 || p.Y >= len(g) {
