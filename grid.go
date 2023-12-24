@@ -34,6 +34,12 @@ const (
 
 type Grid2D [][]byte
 
+func (g Grid2D) Print() {
+	for _, row := range g {
+		fmt.Printf("%s\n", row)
+	}
+}
+
 func (g Grid2D) Get(p Pos2D) (byte, bool) {
 	if p.Y < 0 || p.Y >= len(g) {
 		return 0, false
@@ -42,6 +48,10 @@ func (g Grid2D) Get(p Pos2D) (byte, bool) {
 		return 0, false
 	}
 	return g[p.Y][p.X], true
+}
+
+func (g Grid2D) Set(p Pos2D, b byte) {
+	g[p.Y][p.X] = b
 }
 
 func (g Grid2D) Iter(p Pos2D, d Dir, yield func(p Pos2D, v byte) bool) {
