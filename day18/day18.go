@@ -57,13 +57,40 @@ func main() {
 		g[y] = bytes.Repeat([]byte{'.'}, (maxX-minX*2)+1)
 	}
 	dig(g, insts)
-	fmt.Println("Part 1:", count(g))
+	g.Print()
+	correct := count(g)
+	trap := trapezoidFormula(insts)
+	fmt.Println("Part 1:", correct)
+	fmt.Println("Trapezoid:", trap)
+	fmt.Println("off by: ", correct-trap, "len(insts)", len(insts))
+
 }
 
 type inst struct {
 	dir   aoc2023.Dir
 	c     int
 	color [3]byte
+}
+
+func trapezoidFormula(insts []inst) int {
+	var area int
+	pos := aoc2023.Pos2D{}
+	for _, inst := range insts {
+		nextPos := pos
+		switch inst.dir {
+		case aoc2023.North:
+			nextPos.Y -= inst.c
+		case aoc2023.South:
+			nextPos.Y += inst.c
+		case aoc2023.East:
+			nextPos.X += inst.c
+		case aoc2023.West:
+			nextPos.X -= inst.c
+		}
+		area += (pos.Y + nextPos.Y) * (pos.X - nextPos.X)
+		pos = nextPos
+	}
+	return area / 2
 }
 
 func dig(g aoc2023.Grid2D, insts []inst) {
